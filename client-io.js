@@ -29,7 +29,7 @@ socket.on('message', function(message){
   
   var msg_room = "";
   if(message.room) msg_room = message.room;
-  
+  console.log(data[1]);
   switch(data[0]) {
     case "/hello":
       conn_id = data[1];
@@ -212,6 +212,7 @@ socket.on('disconnect', function(){
 
 function send(msg) {
   var r = room;
+  console.log(msg);
   if(msg[0] == "/") {
     var can_send = true;
     var data = msg.split(" ");
@@ -243,6 +244,7 @@ function send(msg) {
   else {
     if(nick != "") {
       var txt = '/msg ' + room + " " + msg;
+      
       if(rooms[room].type == "pm") {
         txt = "/pm " + room + " " + msg;
       }
@@ -395,6 +397,24 @@ function updateTitle(leading) {
   	read = "(" + numUnread + ") ";
   }
   document.title = leading + read + "CHATS.IO";
+}
+function leaveRoom(roomName) {
+	var msg = '/leave';
+	can_send = true;
+	alert(room + ", " + roomName);
+	msg = msg + " " + roomName;
+	rooms[roomName] = undefined;
+	$('#r_' + roomName).detach();
+	$('#n_' + roomName).detach();
+	$("#chat_" + roomName).detach();
+	for(var r in rooms) {
+		if(rooms[r] != undefined) {
+			roomName = r;
+			displayRoom("r_" + roomName);
+		}
+		break;
+	}
+	if(can_send) socket.send(msg);
 }
 $(window).keydown(function(e) {
     if (e.keyCode === 9) {

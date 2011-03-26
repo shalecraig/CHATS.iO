@@ -3,8 +3,7 @@ var debug = true;
 var nick = "";
 var room = "main";
 var rooms = {};
-var numUnread = 0;
- 
+  
 var nick=prompt("Please enter your name",""); 
 
 var batches = {};
@@ -76,7 +75,6 @@ socket.on('message', function(message){
 			var fname = message.name.split("_")[0];
 
             if(room != id) {
-              addUnread();
               rooms[id]["nb"]++;
               $("#r_" + id).html("@" + fname + " (" + rooms[id]["nb"] + ")");
             } else {
@@ -139,10 +137,10 @@ socket.on('message', function(message){
         $('#room').html("Connected on room #" + room);
         $('#rooms ul:first-child').append("<li id='r_" + room + "'>" + room + "</li>");
         addNewRoom(room);
-		var fname = nick.split("_")[0];
+		var fname = nick.split("~")[0];
         notice(room, "You are connected as " + fname);
       } else {
-		var fname = message.from.split("_")[0];
+		var fname = message.from.split("~")[0];
         batch('join_' + room, fname, function(names) {
           notice(msg_room, names + " joined this room");
         });
@@ -157,7 +155,7 @@ socket.on('message', function(message){
         n = data.split(":");
         var nh = "#n_" + room + "_" + n[0];
         var value = n[1];
-		var fname = value.split("_")[0];
+		var fname = value.split("~")[0];
         
         if($(nh).html() == null) {
           if(n[1] == "undefined" || n[1] == undefined) value = n[0];
@@ -173,7 +171,7 @@ socket.on('message', function(message){
       
     case "/quit":
       $("#n_" + msg_room + "_" + data[1]).detach();
-	  var fname = message.from.split("_")[0];
+	  var fname = message.from.split("~")[0];
       batch('part_' + msg_room, fname, function(names) {
         notice(msg_room, names + " left the room");
       });
@@ -181,8 +179,7 @@ socket.on('message', function(message){
     
     case "/leave":
       $("#n_" + msg_room + "_" + data[1]).detach();
-
-	  var fname = message.from.split("_")[0];
+	  var fname = message.from.split("~")[0];
       batch('part_' + msg_room, fname, function(names) {
         notice(msg_room, names + " left the room");
       });
@@ -206,6 +203,7 @@ socket.on('connect', function(){
 });
 
 socket.on('disconnect', function(){
+  rooms[room] = undefined;
   notice(null, "You have been disconnected");
 });
 
@@ -346,7 +344,7 @@ function displayRoom(r) {
   $("#rooms ul li").removeClass("active");
   $('#r_' + r).addClass("active");
   if(rooms[r]["type"] == "pm") {
-	var fname = rooms[r]["to"].split("_")[0];
+	var fname = rooms[r]["to"].split("~")[0];
    	$('#r_' + r).html("@" + fname);
   } else {
 	if(room.length != 16 && !IsNumeric(room)){
@@ -371,8 +369,10 @@ function addNewRoom(r) {
   $('#room_' + r).append("<div class='chat' id='chat_" + r + "'></div>");
   $('#room_' + r).append('<form id="f_'+ r +'" action="send" method="post" onsubmit="send($(\'#t_' + r + '\').val()); return false;"></form>');
   $('#room_' + r).append("<div class='nicks' id='n_"+ r +"'></div>");
+if ($('#t_' + r).length == 0) {
   $('#f_' + r).append('<input type="text" id="t_' + r + '" name="t" value="" width="50"  autocomplete="off"/><script>t_' + r + '.focus();</script>');
-  $('#f_' + r).append('<input type="submit" value="send" />');
+  $('#f_' + r).append('<input type="submit" value="main" />');
+}
   $('.room').css("display","none");
   $('#r_' + r).click(function() { displayRoom(this.id) });        
   $('#t_' + r).focus(function() { focussedHandler(this.id) });
@@ -383,7 +383,20 @@ function addNewRoom(r) {
 }
 
 socket.on('reconnect', function(){ 
+	rooms[room] = undefined;
+    $('#r_' + room).detach();
+    $('#n_' + room).detach();
+    $("#chat_" + room).detach();
+    for(var r in rooms) {
+      if(rooms[r] != undefined) {
+        room = r;
+        displayRoom("r_" + room);
+      }
+      break;
+    }
+    
 	socket.send("/whoami");
+	// socket.send("/nick " + nick); 
 });
 
 // socket.on('reconnecting', function( nextRetry ){ message({ message: ['System', 'Attempting to re-connect to the server, next attempt in ' + nextRetry + 'ms']})});

@@ -13,6 +13,14 @@ if (!$.cookie('username')) {
 }
 
 var batches = {};
+$(document).ready(function(){
+    $("a[rel^='prettyPhoto']").prettyPhoto({
+    	deeplinking: false,
+    	social_tools: "",
+    	theme: 'facebook'
+    	
+    });
+});
 
 
 var path = location.pathname.replace( "/", "" );

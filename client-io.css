@@ -118,7 +118,7 @@ input[type=submit] {
   color: black;
 }
 #rooms {
-  position: absolute;
+  position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
